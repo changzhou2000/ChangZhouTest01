@@ -21,6 +21,27 @@ struct ContentView: View {
 //    let number = HKMetadataKeyBarometricPressure
 //    let lm = LocationDataManager()
     let cm = MyCoreMotionHelper()
+    @State var baroData: Double = 0.0
+    let diff: Double = 0.01
+
+    func startTimer() {
+        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            updateTime()
+        }
+    }
+
+    func updateTime() {
+        if (cm.enabled) {
+            let baroData2 = cm.getBaroData()  // kilopascals
+            
+//            print(String(format: "%.2f kilopascals (original %.2f)", baroData2, baroData))
+            
+            if (baroData2 - baroData > diff || baroData - baroData2 < -diff) {
+                baroData = baroData2
+                addItem()
+            }
+        }
+    }
 
     var body: some View {
         NavigationView {
@@ -47,6 +68,8 @@ struct ContentView: View {
                 }
             }
             Text("Select an item")
+        }.onAppear {
+            startTimer()
         }
     }
     
@@ -54,7 +77,7 @@ struct ContentView: View {
         var text:String
         
         if (item.barodata != nil) {
-            text = "data: " + item.barodata!
+            text = " " + item.barodata!
         }
         else{
             text = "N/A"

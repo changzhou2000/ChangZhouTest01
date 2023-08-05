@@ -32,8 +32,8 @@ class MyCoreMotionHelper : NSObject {
                     return
                 }
                 guard let data = data else { return }
-                
-                altitude = "\(data.pressure.intValue) kilopascals"
+
+                altitude = String(format: "%.2f kpa", data.pressure.doubleValue)
                 baroData = data.pressure.doubleValue
             }
         } else {
