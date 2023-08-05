@@ -48,7 +48,7 @@ struct ContentView: View {
             List {
                 ForEach(items) { item in
                     NavigationLink {
-                        Text("Item at \(item.timestamp!, formatter: itemFormatter) \(extractValue(item:item))")
+                        Text(itemToString(item:item))
                     } label: {
                         Text("\(item.timestamp!, formatter: itemFormatter) \(extractValue(item:item))")
                     }
@@ -88,7 +88,7 @@ struct ContentView: View {
         var text: String = ""
         
         for item in items {
-            text += "Item at \(itemFormatter.string(from: item.timestamp!)) \(extractValue(item:item))\n"
+            text += itemToString(item: item, separator: ",")+"\n"
         }
 
         let res = share(items: [text])
@@ -178,6 +178,10 @@ struct ContentView: View {
             let nsError = error as NSError
             fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
         }
+    }
+    
+    private func itemToString(item: Item, separator: String="") -> String {
+        return "\(itemFormatter.string(from: item.timestamp!))\(separator) \(extractValue(item:item))"
     }
 }
 
