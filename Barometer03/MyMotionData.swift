@@ -33,7 +33,8 @@ class MyCoreMotionHelper : NSObject {
                 }
                 guard let data = data else { return }
 
-                altitude = String(format: "%.2f kpa", data.pressure.doubleValue)
+//                print(String(format: "cm %.8f kpa", data.pressure.doubleValue))
+                altitude = String(format: "%.5f kpa", data.pressure.doubleValue)
                 baroData = data.pressure.doubleValue
             }
         } else {
@@ -46,7 +47,7 @@ class MyCoreMotionHelper : NSObject {
         return baroData
     }
     
-    func getBaroReading() -> String {
+    func getBaroDataFormatted() -> String {
         return altitude
     }
 }

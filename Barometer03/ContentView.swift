@@ -7,7 +7,7 @@
 
 import SwiftUI
 import CoreData
-//import HealthKit
+
 
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
@@ -34,9 +34,9 @@ struct ContentView: View {
         if (cm.enabled) {
             let baroData2 = cm.getBaroData()  // kilopascals
             
-//            print(String(format: "%.2f kilopascals (original %.2f)", baroData2, baroData))
+//            print(String(format: "%.8f kilopascals (original %.8f) d1= %.8f diff= %.8f", baroData2, baroData, abs(baroData2 - baroData), diff))
             
-            if (baroData2 - baroData > diff || baroData - baroData2 < -diff) {
+            if abs(baroData2 - baroData) > diff {
                 baroData = baroData2
                 addItem()
             }
@@ -66,11 +66,53 @@ struct ContentView: View {
                         Label("Add Item", systemImage: "plus")
                     }
                 }
+                
+                ToolbarItem {
+                    Button(action: export) {
+                        Label("Export Items", systemImage: "square.and.arrow.up.fill")
+                    }
+//                    .confirmationDialog("Are you sure?", isPresented: true) {
+//                        Button("Delete all items?", role: .destructive) {
+//                            deleteAllItems()
+//                        }
+//                    }
+                }
             }
             Text("Select an item")
         }.onAppear {
             startTimer()
         }
+    }
+
+    private func export() {
+        var text: String = ""
+        
+        for item in items {
+            text += "Item at \(itemFormatter.string(from: item.timestamp!)) \(extractValue(item:item))\n"
+        }
+
+        let res = share(items: [text])
+        if (res) {
+            deleteAllItems()
+        }
+    }
+
+    @discardableResult
+    func share(
+        items: [Any],
+        excludedActivityTypes: [UIActivity.ActivityType]? = nil
+    ) -> Bool {
+        guard let source = UIApplication.shared.windows.last?.rootViewController else {
+            return false
+        }
+        let vc = UIActivityViewController(
+            activityItems: items,
+            applicationActivities: nil
+        )
+        vc.excludedActivityTypes = excludedActivityTypes
+        vc.popoverPresentationController?.sourceView = source.view
+        source.present(vc, animated: true)
+        return true
     }
     
     private func extractValue(item: Item) -> String {
@@ -87,7 +129,7 @@ struct ContentView: View {
     
     private func getBaroData() -> String {
         if (cm.enabled) {
-            return cm.getBaroReading()
+            return cm.getBaroDataFormatted()
         }
         return "lm not enabled"
     }
@@ -124,13 +166,32 @@ struct ContentView: View {
             }
         }
     }
+    
+    private func deleteAllItems() {
+        items.forEach(viewContext.delete)
+
+        do {
+            try viewContext.save()
+        } catch {
+            // Replace this implementation with code to handle the error appropriately.
+            // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
+            let nsError = error as NSError
+            fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+        }
+    }
 }
 
 private let itemFormatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.dateStyle = .short
-    formatter.timeStyle = .medium
-    return formatter
+//    let formatter = DateFormatter()
+//    formatter.dateStyle = .short
+//    formatter.timeStyle = .medium
+    
+    let formatter2 = DateFormatter()
+    formatter2.locale = Locale(identifier: "en_US_POSIX")
+    formatter2.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+    formatter2.timeZone = TimeZone.init(abbreviation: "UTC")
+    
+    return formatter2
 }()
 
 struct ContentView_Previews: PreviewProvider {
